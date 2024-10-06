@@ -6,6 +6,7 @@ import (
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("New request ...")
 	w.WriteHeader(http.StatusOK)
 }
 
