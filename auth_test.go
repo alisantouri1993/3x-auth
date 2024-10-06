@@ -12,7 +12,7 @@ import (
 func TestServerAvailability(t *testing.T) {
 	check := t.Run("Check if port is open", func(t *testing.T) {
 		timeout := time.Second
-		port := 2000
+		port := 20000
 		address := fmt.Sprintf("localhost:%d", port)
 		_, err := net.DialTimeout("tcp", address, timeout)
 
@@ -26,7 +26,7 @@ func TestServerAvailability(t *testing.T) {
 	}
 
 	t.Run("Test Auth API response is OK", func(t *testing.T) {
-		requestUrl := fmt.Sprintf("http://localhost:%d/%s", 2000, "/auth")
+		requestUrl := fmt.Sprintf("http://localhost:%d/%s", 20000, "/auth")
 		req, err := http.NewRequest(http.MethodGet, requestUrl, nil)
 
 		if err != nil {
