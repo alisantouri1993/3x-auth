@@ -11,6 +11,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	fmt.Println("Authentication Server Started ...")
 	http.HandleFunc("/auth", AuthHandler)
 	err := http.ListenAndServe("localhost:2000", nil)
 	if err == http.ErrServerClosed {
