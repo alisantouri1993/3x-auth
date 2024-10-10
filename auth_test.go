@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -41,5 +42,48 @@ func TestServerAvailability(t *testing.T) {
 		if resp != nil && resp.StatusCode != http.StatusOK {
 			t.Errorf("Request not Accepted , response code = %d", resp.StatusCode)
 		}
+	})
+}
+
+/* Unit Testing */
+func TestCheckHttpHeaders(t *testing.T) {
+
+	assertHttpStatus := func(got, expected int) {
+		if got != expected {
+			t.Errorf("Got %d , Expected %d", got, expected)
+		}
+	}
+
+	createRequestResponse :=
+		func() (*http.Request, *httptest.ResponseRecorder) {
+			request, _ := http.NewRequest(http.MethodGet, "/auth", nil)
+			response := httptest.NewRecorder()
+
+			return request, response
+		}
+
+	t.Run("Expect BadRequest status , when ip and username is not set", func(t *testing.T) {
+
+		request, response := createRequestResponse()
+		request.Header.Set("X-Original-IP", "")
+		request.Header.Set("X-Username", "")
+
+		AuthHandler(response, request)
+		got := response.Result().StatusCode
+		expected := http.StatusBadRequest
+
+		assertHttpStatus(got, expected)
+	})
+
+	t.Run("Expect OK status , when both ip & username is set", func(t *testing.T) {
+		request, response := createRequestResponse()
+		request.Header.Set("X-Original-IP", "127.0.0.1")
+		request.Header.Set("X-Username", "123456")
+
+		AuthHandler(response, request)
+		got := response.Result().StatusCode
+		expected := http.StatusOK
+
+		assertHttpStatus(got, expected)
 	})
 }

@@ -11,7 +11,18 @@ const (
 )
 
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+
+	var StatusCode int
+	ip := r.Header.Get("X-Original-IP")
+	username := r.Header.Get("X-Username")
+
+	if ip != "" && username != "" {
+		StatusCode = http.StatusOK
+	} else {
+		StatusCode = http.StatusBadRequest
+	}
+
+	w.WriteHeader(StatusCode)
 }
 
 func main() {
