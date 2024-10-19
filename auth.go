@@ -37,6 +37,7 @@ func (imStore *InMemoryUnameStore) CheckUname(username, ip string) int {
 			}
 		} else {
 			uname.connectedClients = append(uname.connectedClients, ip)
+			imStore.store[username] = uname
 			checkStatus = http.StatusOK
 		}
 	} else {
@@ -59,7 +60,6 @@ func (as *AuthServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		StatusCode = http.StatusBadRequest
 	}
-
 	w.WriteHeader(StatusCode)
 }
 
