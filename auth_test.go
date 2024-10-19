@@ -48,7 +48,8 @@ func TestServerAvailability(t *testing.T) {
 /* Unit Testing */
 func TestCheckHttpHeaders(t *testing.T) {
 
-	assertHttpStatus := func(got, expected int) {
+	assertHttpStatus := func(t testing.TB, got, expected int) {
+		t.Helper()
 		if got != expected {
 			t.Errorf("Got %d , Expected %d", got, expected)
 		}
@@ -62,7 +63,7 @@ func TestCheckHttpHeaders(t *testing.T) {
 			return request, response
 		}
 
-	t.Run("Expect BadRequest status , when ip and username is not set", func(t *testing.T) {
+	t.Run("Expect BadRequest status , when ip/username is not set", func(t *testing.T) {
 
 		request, response := createRequestResponse()
 		request.Header.Set("X-Original-IP", "")
@@ -72,10 +73,10 @@ func TestCheckHttpHeaders(t *testing.T) {
 		got := response.Result().StatusCode
 		expected := http.StatusBadRequest
 
-		assertHttpStatus(got, expected)
+		assertHttpStatus(t, got, expected)
 	})
 
-	t.Run("Expect OK status , when both ip & username is set", func(t *testing.T) {
+	t.Run("Expect OK Status , when ip/username is set and username can accept new connection", func(t *testing.T) {
 		request, response := createRequestResponse()
 		request.Header.Set("X-Original-IP", "127.0.0.1")
 		request.Header.Set("X-Username", "123456")
@@ -84,6 +85,8 @@ func TestCheckHttpHeaders(t *testing.T) {
 		got := response.Result().StatusCode
 		expected := http.StatusOK
 
-		assertHttpStatus(got, expected)
+		assertHttpStatus(t, got, expected)
 	})
 }
+
+//UnameConnectionStore

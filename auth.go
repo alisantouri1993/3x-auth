@@ -10,6 +10,10 @@ const (
 	API_PORT = 20000
 )
 
+func CheckUnameStatus(ip, username string) int {
+	return http.StatusUnauthorized
+}
+
 func AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	var StatusCode int
@@ -17,7 +21,7 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.Header.Get("X-Username")
 
 	if ip != "" && username != "" {
-		StatusCode = http.StatusOK
+		StatusCode = CheckUnameStatus(ip, username)
 	} else {
 		StatusCode = http.StatusBadRequest
 	}
