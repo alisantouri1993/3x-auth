@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"slices"
 )
 
 const (
@@ -10,18 +11,51 @@ const (
 	API_PORT = 20000
 )
 
-func CheckUnameStatus(ip, username string) int {
-	return http.StatusUnauthorized
+type UnameConnectionStore interface {
+	CheckUname(username, ip string) int
 }
 
-func AuthHandler(w http.ResponseWriter, r *http.Request) {
+type Uname struct {
+	maxConnections   int
+	connectedClients []string
+}
 
+type InMemoryUnameStore struct {
+	store map[string]Uname
+}
+
+func (imStore *InMemoryUnameStore) CheckUname(username, ip string) int {
+	var checkStatus int
+	uname, ok := imStore.store[username]
+	if ok {
+		if len(uname.connectedClients) == uname.maxConnections {
+			idx := slices.Index(uname.connectedClients, ip)
+			if idx == -1 {
+				checkStatus = http.StatusUnauthorized
+			} else {
+				checkStatus = http.StatusOK
+			}
+		} else {
+			uname.connectedClients = append(uname.connectedClients, ip)
+			checkStatus = http.StatusOK
+		}
+	} else {
+		checkStatus = http.StatusUnauthorized
+	}
+	return checkStatus
+}
+
+type AuthServer struct {
+	store UnameConnectionStore
+}
+
+func (as *AuthServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var StatusCode int
 	ip := r.Header.Get("X-Original-IP")
 	username := r.Header.Get("X-Username")
 
 	if ip != "" && username != "" {
-		StatusCode = CheckUnameStatus(ip, username)
+		StatusCode = as.store.CheckUname(username, ip)
 	} else {
 		StatusCode = http.StatusBadRequest
 	}
@@ -32,7 +66,9 @@ func AuthHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	fmt.Println("Authentication Server Started ...")
-	http.HandleFunc(API_PATH, AuthHandler)
+	store := InMemoryUnameStore{store: map[string]Uname{}}
+	authserver := AuthServer{store: &store}
+	http.HandleFunc(API_PATH, authserver.ServeHTTP)
 	serverAddress := fmt.Sprintf("localhost:%d", API_PORT)
 	err := http.ListenAndServe(serverAddress, nil)
 	if err == http.ErrServerClosed {

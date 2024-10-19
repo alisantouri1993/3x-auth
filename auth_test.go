@@ -39,7 +39,7 @@ func TestServerAvailability(t *testing.T) {
 			t.Errorf("Error Sending request , ERROR= %q", err)
 		}
 
-		if resp != nil && resp.StatusCode != http.StatusOK {
+		if resp != nil && resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("Request not Accepted , response code = %d", resp.StatusCode)
 		}
 	})
@@ -69,7 +69,8 @@ func TestCheckHttpHeaders(t *testing.T) {
 		request.Header.Set("X-Original-IP", "")
 		request.Header.Set("X-Username", "")
 
-		AuthHandler(response, request)
+		authServer := AuthServer{}
+		authServer.ServeHTTP(response, request)
 		got := response.Result().StatusCode
 		expected := http.StatusBadRequest
 
@@ -78,10 +79,18 @@ func TestCheckHttpHeaders(t *testing.T) {
 
 	t.Run("Expect OK Status , when ip/username is set and username can accept new connection", func(t *testing.T) {
 		request, response := createRequestResponse()
-		request.Header.Set("X-Original-IP", "127.0.0.1")
-		request.Header.Set("X-Username", "123456")
+		userName := "123456"
+		ip := "127.0.0.1"
 
-		AuthHandler(response, request)
+		_u1 := Uname{maxConnections: 1, connectedClients: nil}
+		_store := map[string]Uname{userName: _u1}
+		store := InMemoryUnameStore{store: _store}
+
+		request.Header.Set("X-Original-IP", ip)
+		request.Header.Set("X-Username", userName)
+
+		authServer := AuthServer{store: &store}
+		authServer.ServeHTTP(response, request)
 		got := response.Result().StatusCode
 		expected := http.StatusOK
 
